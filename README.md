@@ -1,7 +1,7 @@
 # Spring security (spring framework 6)
 
 - quando cria-se um projeto spring, o mesmo vem com algumas configurações padrões, dependendo das dependências inseridas
-- no caso do spring security, ja temos os seguintes componentes criados e envolvidos:
+- no caso do spring security, ja temos o metodo Basic configurado como padrão de autenticação e os seguintes componentes criados:
 
 #### Authentication filter
 - delega a autenticação para o authentication manager
@@ -18,7 +18,9 @@
 - implementa a responsabilidade de gerenciamento do usuário
 
 #### Password encoder
--implementa o gerenciamento de senha
+- implementa o gerenciamento de senha
+- codifica uma senha
+- verifica se a senha corresponde a uma codificação existente
 
 #### Security context
 - mantem os dados de autenticação apõs o processo de autenticação.
