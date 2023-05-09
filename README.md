@@ -24,3 +24,23 @@
 
 #### Security context
 - mantem os dados de autenticação apõs o processo de autenticação.
+
+## Personalizando a configuração
+- para personalizar a configuração padrão do spring security, precisamos substituir os pontos salientados acima;
+- no exemplo abaixo estamos fornecendo um user details service e um novo password encoder (user details depende dele, se não fornecedor quando o personalizamos, não funcionará):
+```
+    @Bean
+    UserDetailsService userDetailsService() {
+        var user = User.withUsername("fabricio")
+                .password("1234")
+                .authorities("read")
+                .build();
+
+        return new InMemoryUserDetailsManager(user);
+    }
+    
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
+    }
+```
