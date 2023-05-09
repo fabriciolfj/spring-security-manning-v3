@@ -1,4 +1,4 @@
-# Spŕing security (spring framework 6)
+# Spring security (spring framework 6)
 
 - quando cria-se um projeto spring, o mesmo vem com algumas configurações padrões, dependendo das dependências inseridas
 - no caso do spring security, ja temos os seguintes componentes criados e envolvidos:
