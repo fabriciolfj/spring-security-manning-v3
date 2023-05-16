@@ -64,4 +64,89 @@ return new InMemoryUserDetailsManager(user);
     }
 ```
 
-- 3
+## UserDetailsService
+- cuida do gerenciamento dos usuários
+- uma forma de recuperar o usuário de algum local, seja em uma base de dados ou memória
+- possui apenas um método loadUserByname, que recebi o nome do usuário
+- a forma de buscar, a implementação da interface UserDetailsService executa
+- o retorno é uma implementação do UserDetails
+
+## GrantedAuthority
+- definie uma função dentro do aplicativo que é permitida ao usuário
+
+
+### JdbcUserDetailsManager
+- é uma implementação do UserDetailsService
+- possui um script default que receber o usuário e suas autoridades na base de dados
+- independente do sistema DBMS
+- caso seja utilizado, é chamado no authentication provider
+- caso utilize um shema diferente do padrão jdbcuserdetailsmanager, podemos personalizar, conforme demonstrado abaixo:
+```
+@Bean
+public UserDetailsService userDetailsService(DataSource dataSource) {
+  String usersByUsernameQuery = 
+     "select username, password, enabled
+      [CA]from users where username = ?";
+  String authsByUserQuery =
+     "select username, authority
+      [CA]from spring.authorities where username = ?";
+ 
+  var userDetailsManager = new JdbcUserDetailsManager(dataSource);
+  userDetailsManager.setUsersByUsernameQuery(usersByUsernameQuery);
+  userDetailsManager.setAuthoritiesByUsernameQuery(authsByUserQuery);
+  return userDetailsManager;
+}
+```
+
+## PasswordEncoder
+- é uma interface
+- o authorizationprovider utiliza-o para validar o password do usuário informado na requisição com o recuperado pela implementação do UserDetailsService
+- serve para encriptar a senha
+- e verificar o texto informado, corresponde ao texto codificado
+```
+public interface PasswordEncoder {
+ 
+  String encode(CharSequence rawPassword);
+  boolean matches(CharSequence rawPassword, String encodedPassword);
+ 
+  default boolean upgradeEncoding(String encodedPassword) { 
+    return false; 
+  }
+}
+```
+
+## DelegationPasswordEncoder
+- quando temos um aplicativo que sua encriptação de senha será atualizada para os novos usuários
+- mas não queremos mudar para os usuários antigos
+- usamos o delegation, onde informamos qual encriptação utilizar, com base na chave informada (no exemplo abaixo o bcrypt e o default)
+```
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        final Map<String, PasswordEncoder> encoders = new HashMap<>();
+        
+        encoders.put("noop", NoOpPasswordEncoder.getInstance());
+        encoders.put("bcrypt", new BCryptPasswordEncoder());
+        encoders.put("scrypt", new SCryptPasswordEncoder(16000, 8 , 1, 32, 64));
+        
+        return new DelegatingPasswordEncoder("bcrypt", encoders);
+    }
+```
+
+## Alguns conceitos
+### Codificação
+- e o processo de transformar uma entrada em uma saída diferente
+
+### Criptografia
+- é um tipo específico de codificação, aonde fornecemos uma chave (ou 2) junto com a entrada para trasformar-la e também valida-la posteriormente
+
+#### Chave simétrica
+- quando a chave que encripta e decripta o dado, são as mesmas
+
+#### Chave assimétrica
+- quando a chave que encripta (chave pública) e diferente da que decripta (chave privada)
+
+### Hashing
+- é um tipo de codificação, aonde não tem uma chave de entrada
+- transformando a entrada de forma aleatória
+
+#4.2.1
