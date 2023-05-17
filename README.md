@@ -149,4 +149,39 @@ public interface PasswordEncoder {
 - é um tipo de codificação, aonde não tem uma chave de entrada
 - transformando a entrada de forma aleatória
 
-#4.2.1
+## Geradores de chave
+- utilizados para erar um tipo de chave, que está é utilizada para algum algoritmo de criptografia ou hash.
+
+## criptografadores
+- criptografador implementa um algoritmo de criptografia.
+
+# Filtros
+- filtros interceptam uma requisição aplicando nela alguma lógica para seguir ou interromper.
+- o spring secutiry fornece algumas implementações de filtros
+- para implementar um filtro devemos implementar a interface Filter, aonde teremos:
+  - servletRequest = para pegar a requisição
+  - servletResponse = representa a resposta ao cliente, onde podemos modificar ela no filter ou delegar para outras etapas
+  - filterChain = que representa a cadeia de filtros, com uma ordem definida (podemos inserir um filtro no meio dos filtros criados pelo spring, ou definir a ordem dele tambem)
+- alguns filtros ja criados pelo spring security:
+  - BasicAuthenticationFilter: cuida da autenticação http básica
+  - csrfFilter: cuida da proteção contra falsificação de solicitação entre sites
+  - corsFilter: cuida de regras de compartilhamento de recursos entre origens.
+- quando temos filtros na mesma posição de chamada (na cadeia de filtros), a ordem não é definida.
+
+### Exemplo colocando um filtro custom, antes de um existente
+```
+    @Bean
+    SecurityFilterChain configure(final HttpSecurity http) throws Exception {
+        http.httpBasic();
+        //http.authenticationProvider(authenticationProvider);
+
+        http
+                .addFilterBefore(new RequestValidationFilter(), BasicAuthenticationFilter.class)
+                .authorizeHttpRequests()
+                .anyRequest()
+                //.permitAll();
+                .authenticated();
+
+        return http.build();
+    }
+```

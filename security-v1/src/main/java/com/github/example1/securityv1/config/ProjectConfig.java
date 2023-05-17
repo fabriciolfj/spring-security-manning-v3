@@ -1,5 +1,6 @@
 package com.github.example1.securityv1.config;
 
+import com.github.example1.securityv1.filters.RequestValidationFilter;
 import com.github.example1.securityv1.service.InMemoryUserDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import javax.sql.DataSource;
 import java.util.HashMap;
@@ -55,7 +57,9 @@ public class ProjectConfig {
         http.httpBasic();
         //http.authenticationProvider(authenticationProvider);
 
-        http.authorizeHttpRequests()
+        http
+                .addFilterBefore(new RequestValidationFilter(), BasicAuthenticationFilter.class)
+                .authorizeHttpRequests()
                 .anyRequest()
                 //.permitAll();
                 .authenticated();
@@ -66,11 +70,15 @@ public class ProjectConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         final Map<String, PasswordEncoder> encoders = new HashMap<>();
+        final var bcrypt = new BCryptPasswordEncoder();
 
         encoders.put("noop", NoOpPasswordEncoder.getInstance());
-        encoders.put("bcrypt", new BCryptPasswordEncoder());
+        encoders.put("bcrypt", bcrypt);
         encoders.put("scrypt", new SCryptPasswordEncoder(16000, 8 , 1, 32, 64));
 
-        return new DelegatingPasswordEncoder("bcrypt", encoders);
+        var delegating =  new DelegatingPasswordEncoder("bcrypt", encoders);
+        delegating.setDefaultPasswordEncoderForMatches(bcrypt);
+
+        return delegating;
     }
 }
