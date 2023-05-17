@@ -11,3 +11,6 @@ spring:
     password:
   sql:
     init: always
+
+authorization:
+  key: 1234

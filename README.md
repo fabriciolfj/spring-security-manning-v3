@@ -185,3 +185,22 @@ public interface PasswordEncoder {
         return http.build();
     }
 ```
+### Exemplo colocando um filtro custom, depois de um existente
+```
+.addFilterAfter(new AuthenticationLoggingFilter(), BasicAuthenticationFilter.class)
+```
+
+### Exemplo colocando um filtro na mesma posição de um existente
+- nesse exemplo, o spring não substitui um pelo outro, teremos 2 filtros e a ordem deles é arbitrária
+```
+.addFilterAfter(new AuthenticationLoggingFilter(), BasicAuthenticationFilter.class)
+```
+
+### Algumas observações sobre filtros
+- devemos ter cuidado em não abusar de filtros, podem deixar o sistema mais lento e confuso
+- optar por algum mais simples como filter, embora spring oferece seus filtros como OncePerRequestFilter(executado apenas uma vez por solicitação) ou GenericFilterBean
+- Ele suporta apenas solicitações HTTP, mas na verdade é o que sempre usamos. A vantagem é que ele lança os tipos e recebemos diretamente as solicitações como HttpServletRequeste HttpServletResponse. Lembre-se, com a Filterinterface, tivemos que lançar a solicitação e a resposta. 
+- Você pode implementar a lógica para decidir se o filtro é aplicado ou não. Mesmo se você adicionar o filtro à cadeia, poderá decidir que ele não se aplica a determinadas solicitações. Você define isso substituindo o shouldNotFilter(HttpServletRequest)método. Por padrão, o filtro se aplica a todas as solicitações. 
+- Por padrão, a não se aplica a solicitações assíncronas ou solicitações de despacho de erro. Você pode alterar esse comportamento substituindo os métodos e .OncePerRequestFilter shouldNotFilterAsyncDispatch()shouldNotFilterErrorDispatch()
+
+# 6

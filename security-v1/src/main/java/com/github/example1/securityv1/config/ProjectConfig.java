@@ -1,6 +1,8 @@
 package com.github.example1.securityv1.config;
 
+import com.github.example1.securityv1.filters.AuthenticationLoggingFilter;
 import com.github.example1.securityv1.filters.RequestValidationFilter;
+import com.github.example1.securityv1.filters.StaticKeyAuthenticationFilter;
 import com.github.example1.securityv1.service.InMemoryUserDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +26,9 @@ import java.util.Map;
 
 @Configuration
 public class ProjectConfig {
+
+    //@Autowired
+    //private StaticKeyAuthenticationFilter staticKeyAuthenticationFilter;
 
     /*@Bean
     UserDetailsService userDetailsService() {
@@ -59,6 +64,8 @@ public class ProjectConfig {
 
         http
                 .addFilterBefore(new RequestValidationFilter(), BasicAuthenticationFilter.class)
+                .addFilterAfter(new AuthenticationLoggingFilter(), BasicAuthenticationFilter.class)
+                //.addFilterAt(staticKeyAuthenticationFilter, BasicAuthenticationFilter.class)
                 .authorizeHttpRequests()
                 .anyRequest()
                 //.permitAll();
