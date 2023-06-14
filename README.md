@@ -80,7 +80,7 @@ return new InMemoryUserDetailsManager(user);
 - possui um script default que receber o usuário e suas autoridades na base de dados
 - independente do sistema DBMS
 - caso seja utilizado, é chamado no authentication provider
-- caso utilize um shema diferente do padrão jdbcuserdetailsmanager, podemos personalizar, conforme demonstrado abaixo:
+- caso utilize um schema diferente do padrão jdbcuserdetailsmanager, podemos personalizar, conforme demonstrado abaixo:
 ```
 @Bean
 public UserDetailsService userDetailsService(DataSource dataSource) {
@@ -150,7 +150,7 @@ public interface PasswordEncoder {
 - transformando a entrada de forma aleatória
 
 ## Geradores de chave
-- utilizados para erar um tipo de chave, que está é utilizada para algum algoritmo de criptografia ou hash.
+- utilizados para gerar um tipo de chave, que está é utilizada por algum algoritmo de criptografia ou hash.
 
 ## criptografadores
 - criptografador implementa um algoritmo de criptografia.
