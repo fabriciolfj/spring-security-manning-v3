@@ -203,4 +203,21 @@ public interface PasswordEncoder {
 - Você pode implementar a lógica para decidir se o filtro é aplicado ou não. Mesmo se você adicionar o filtro à cadeia, poderá decidir que ele não se aplica a determinadas solicitações. Você define isso substituindo o shouldNotFilter(HttpServletRequest)método. Por padrão, o filtro se aplica a todas as solicitações. 
 - Por padrão, a não se aplica a solicitações assíncronas ou solicitações de despacho de erro. Você pode alterar esse comportamento substituindo os métodos e .OncePerRequestFilter shouldNotFilterAsyncDispatch()shouldNotFilterErrorDispatch()
 
-# 6
+# AuthenticationProvider
+- e a camada responsável pela lógica de autenticação.
+  - por padrão ele delega a busca do usuario ao UserDetailsService e PasswordEncoder para senha 
+- nele encontra-se as condições e instruções que decidem pela autenticação ou não da solicitação.
+- quem delega responsabilidade para ele é  authenticatinManager, que é chamado após a execução dos filtros
+
+## Processo de autenticação do authenticationProvider
+- envolve a interface Authentication que extende a interface Principal
+- interface AuthenticationProvider 
+  - que possui o metodo isAuthenticated(), que podemos implementar nossa lógica para retornar true ou false
+  - supports, que diz se aquele AuthenticationProvider, suporta tal classe que possui a lógica.
+
+# SecurityContext
+- o authenticationManager após concluir o processo de autenticação, ele armazena uma instancia autentication em um security context
+- o spring oferece 3 maneiras de gerenciar  o securityContext como um objeto (security context holder):
+  - MODE_THREADLOCAL -> permite que cada thread armazene seus próprios detalhes (comum/default)
+  - MODE_INHERITABLETHREADLOCAL ->copia o contexto para a próxima thread, caso  método seja assincrono
+  - MODE_GLOBAL -> faz com que todos os threads da app vejam a mesma instância do contexto de segurança
