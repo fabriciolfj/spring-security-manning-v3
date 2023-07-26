@@ -208,6 +208,7 @@ public interface PasswordEncoder {
   - por padrão ele delega a busca do usuario ao UserDetailsService e PasswordEncoder para senha 
 - nele encontra-se as condições e instruções que decidem pela autenticação ou não da solicitação.
 - quem delega responsabilidade para ele é  authenticatinManager, que é chamado após a execução dos filtros
+- quando fornecemos uma implementação do authenticationProvider, o spring prioriza ela em vez da default
 
 ## Processo de autenticação do authenticationProvider
 - envolve a interface Authentication que extende a interface Principal
