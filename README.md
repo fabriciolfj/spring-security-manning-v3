@@ -222,3 +222,28 @@ public interface PasswordEncoder {
   - MODE_THREADLOCAL -> permite que cada thread armazene seus próprios detalhes (comum/default)
   - MODE_INHERITABLETHREADLOCAL ->copia o contexto para a próxima thread, caso  método seja assincrono
   - MODE_GLOBAL -> faz com que todos os threads da app vejam a mesma instância do contexto de segurança
+
+## propagar contexto de segurança para threads criadas fora do contexto spring
+- para propagar o contexto de segurança a threads criadas fora do contexto spring (fora do @Async)
+- podemos utilizar a classe DelegatingSecurityContextExecutor, conforme demonstrado abaixo:
+```
+    @GetMapping("/hola")
+    public String hola() throws Exception {
+        Callable<String> task = () -> {
+            SecurityContext context = SecurityContextHolder.getContext();
+            return context.getAuthentication().getName();
+        };
+
+        var e = Executors.newCachedThreadPool();
+        e = new DelegatingSecurityContextExecutorService(e);
+        try {
+            return "hola, " + e.submit(task).get() + "!";
+        } finally {
+            e.shutdown();
+        }
+    }
+```
+
+## Modificando o cabeçalho de resposta em caso de falha na autenticacao
+- para personalizar uma resposta para uma autenticação com falha, podemos implementar a interface AuthenticationEntryPoint
+- e coloca-la na nossa configuração de segurança(HttpSecurity)
