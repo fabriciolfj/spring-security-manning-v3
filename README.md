@@ -247,3 +247,47 @@ public interface PasswordEncoder {
 ## Modificando o cabeçalho de resposta em caso de falha na autenticacao
 - para personalizar uma resposta para uma autenticação com falha, podemos implementar a interface AuthenticationEntryPoint
 - e coloca-la na nossa configuração de segurança(HttpSecurity)
+
+# Authorização (ações que o usuário pode executar no app)
+- o filtro de autorização utiliza o contexto para pegar os authorities e decidir se a requisição(usuário) autenticada tem ou não autorização
+- as autorizações ficam dentro da implementação da interface GrantedAuthority, que esta no user details
+- um userDetails pode ter várias grantedAuthorities
+- dentro da configuração de authorização, podemos utilizar o hasAnyAuthority(varargs), hasAuthority(value) ou access()
+```
+    public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
+        http.httpBasic(Customizer.withDefaults());
+
+        http.authorizeHttpRequests(
+                c -> c.anyRequest()
+                        //.hasAuthority("WRITE")
+                        .hasAnyAuthority("WRITE", "READ")
+        );
+
+        return http.build();
+    }
+```
+- o método access() é indicado para casos mais complexos, onde os outros 2 não atendem.
+- por exemplo, so e permitido acesso após as 12h
+```
+T(java.time.LocalTime).now().isAfter(T(java.time.LocalTime).of(12, 0))
+```
+
+### use de roles
+- roles é uma conjunto de autoridades que um usuário pode executar
+- por exemplo admin é uma role, que podem read, write e delete
+- lembrando que as roles devem começar com ROLE_, como ROLE_ADMIN, para criar ao usuario
+- em seu uso, deve ignorar o prefixo ROLE_
+- para definir restrições com base em roles, podem usar os seguintes métodos, hasRole(), hasAnyRole() e access()
+```
+
+        http.authorizeHttpRequests(
+                c -> c.anyRequest()
+                        .hasRole("ADMIN")
+        );
+        
+        User.withUsername("jane")
+                .password("12345")                
+                .authorities("ROLE_MANAGER")
+                .build();
+```
+- se usar roles("value"), na especificação do usuaŕio, podemos ignorar o ROLE_
