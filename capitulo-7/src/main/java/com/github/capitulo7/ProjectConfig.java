@@ -2,8 +2,10 @@ package com.github.capitulo7;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
@@ -24,13 +26,27 @@ public class ProjectConfig {
                 !hasAuthority('delete')
                 """;
 
-        http.authorizeHttpRequests(
-                c -> c.anyRequest()
+        /*http.authorizeHttpRequests(
+                c -> //c.requestMatchers("/hello").hasRole("ADMIN")
+                       // .requestMatchers("/ciao").hasRole("MANAGER")
+                       // .anyRequest().permitAll()//c.anyRequest()
                         //.hasAuthority("WRITE")
                         //.hasAnyAuthority("WRITE", "READ")
-                        .hasRole("ADMIN")
+                        //.hasRole("ADMIN")
                         //.access(new WebExpressionAuthorizationManager(expression))
-        );
+        );*/
+        http.csrf(AbstractHttpConfigurer::disable);
+
+        /*http.authorizeHttpRequests(c -> c.requestMatchers(HttpMethod.GET, "/a")
+                .authenticated()
+                .requestMatchers(HttpMethod.POST, "/a")
+                .permitAll()
+                .anyRequest()
+                .denyAll()
+        );*/
+        http.authorizeHttpRequests(c -> c.requestMatchers("/product/{code:^[0-9]*$}")
+                .permitAll()
+                .anyRequest().denyAll());
 
         return http.build();
     }
@@ -41,7 +57,7 @@ public class ProjectConfig {
         var user1 = User.withUsername("john")
                 .password("12345")
                 //.authorities("read")
-                .roles("ADMIN")
+                .roles("ADMIN", "TESTE")
                 .build();
 
         var user2 = User.withUsername("jane")

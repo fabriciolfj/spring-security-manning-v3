@@ -291,3 +291,41 @@ T(java.time.LocalTime).now().isAfter(T(java.time.LocalTime).of(12, 0))
                 .build();
 ```
 - se usar roles("value"), na especificação do usuaŕio, podemos ignorar o ROLE_
+
+### restringir por path
+- para restringir o acesso a um determinado endpoint, utilizamos o requestMatchers(), como:
+```
+        http.authorizeHttpRequests(
+                c -> c.requestMatchers("/hello").hasRole("ADMIN")
+                        .requestMatchers("/ciao").hasRole("MANAGER")
+                        .anyRequest().permitAll())
+```
+- sempre vamos do mais especifico para o geral, caso queira restringir um caminho e liberar os demais, começo pela restrição
+- podemos referenciar a varios valores no path ou a apenas um, utilizando o corings ** para varias ou * para um, como:
+```
+http.authorizeHttpRequests(
+                c -> c.requestMatchers("/a/**).authenticated()
+                        .anyRequest().permitAll())
+```
+- no exemplo acima a/**, corresponde a a/qualquer coisa, qualquer quantidade de caminhos
+- no exemplo a a/*, corresponde  a um caminho tipo: a/b. a/qualquer caminho
+- uma outra forma é utilizar expressão regular para restringir acesso a um path. 
+  - por exemplo: temos o path /{country}/{language}, somente vamos permitir acesso a paises US, CA, Uk e idioma en ou fr, caso não atenda, o usuario deverá ter uma função premium.
+```
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) 
+    throws Exception {
+ 
+    http.httpBasic(Customizer.withDefaults());
+ 
+    http.authorizeHttpRequests(
+ 
+      c -> c.regexMatchers(".*/(us|uk|ca)+/(en|fr).*")
+                .authenticated()    
+            .anyRequest()           
+                .hasAuthority("premium");
+  
+    );      
+ 
+  }
+``
