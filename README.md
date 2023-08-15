@@ -374,4 +374,34 @@ public class CustomCsrfTokenRepository implements CsrfTokenRepository
         return http.build();
     }
 
-``
+```
+
+# CORS
+- compartilhamento de recursos com origiens (dominios) diferentes
+- é uma restrição do navegador, não aceitar requisições para diminíos diferentes de onde ele esta hospedado
+- para contornar isso existe o cors, onde podemos especificiar quais métodos ou dominios podem ser aceitos
+- podemos fazer via cabeçalho da requisição ou configuração 
+- abaixo um exemplo de configuração de cors
+- devemos informar os verbos http, porque o corsconfiguration não possui comportamento padrão, ou seja, se não informar, não conseguiremos acessar os endpoints
+```
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.cors(c -> {
+            CorsConfigurationSource source = request -> {
+                CorsConfiguration config = new CorsConfiguration();
+                config.setAllowedOrigins(List.of("example.com", "example.org"));
+                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+                config.setAllowedHeaders(List.of(""));
+                
+                return config;
+            };
+            
+            c.configurationSource(source);
+        });
+        
+        http.csrf(c -> c.disable());
+        http.authorizeHttpRequests(c -> c.anyRequest().permitAll());
+
+        return http.build();
+    }
+```
