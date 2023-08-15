@@ -328,4 +328,50 @@ http.authorizeHttpRequests(
     );      
  
   }
+```
+
+## CSRF
+- por default endpoints post são protejidos pelo filter csrf no spring security
+- csrf é um tipo de ataque generalizado, fazendo com que os usuários executem ações indesejadas em um app web após a autenticação.
+- para se proteger, envia-se um token exclusivo no header da requisição (não o token de autenticação), para operações mutantes (post, put, delete, path)
+- esse token é usado pelo filter csrffilter (que intercepta todas as requisições quando a proteção csrf estiver ativa)
+- o token e gerado por um componente CsrfTokenRepository, que armazena na sessão http
+- o atributo aonde armazena-se o token é chamado de _csrf
+- exemplo abaixo de uma requisição passando o token csrf, e também precisamos passar o id da sessão, pois a implementação padrão do csrftokenrepository, vincula o token a sessão http
+```
+curl -X POST   http://localhost:8080/hello 
+-H 'Cookie: JSESSIONID=21ADA55E10D70BA81C338FFBB06B0206'   
+-H 'X-CSRF-TOKEN: tAlE3LB_R_KN48DFlRChc…'
+```
+- obs: é de responsabilidade do backend enviar o token csrf ao front no momento do get
+- essa abordagem e indicada quando o servidor que autentica o token, é o mesmo que gerencia as paginas
+- em caso de separação entre front e backend, outra abordagem e indicada
+- também podemos customizar o token csrf, e quais endpoints terão by pass dele
+- aqui um exemplo:
+```
+    @Bean
+    public SecurityFilterChain configure(HttpSecurity http) throws Exception {
+        http.csrf(c -> c.ignoringRequestMatchers("/ciao"));
+        http.authorizeHttpRequests(c -> c.anyRequest().permitAll());
+
+        return http.build();
+    }
+```
+- podemos personalizar a geração e a consulta do token, implementando a interface conforme abaixo e fazendo uso da implementação no config:
+```
+public class CustomCsrfTokenRepository implements CsrfTokenRepository
+```
+```
+    @Bean
+    public SecurityFilterChain configure(HttpSecurity http) throws Exception {
+        http.csrf(c -> {
+            c.csrfTokenRepository(csrfTokenRepository);
+            c.csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler());
+        });
+
+        http.authorizeHttpRequests(c -> c.anyRequest().permitAll());
+
+        return http.build();
+    }
+
 ``
