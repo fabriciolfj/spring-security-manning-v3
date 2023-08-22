@@ -12,16 +12,21 @@ public class BookPermissionEvaluator implements PermissionEvaluator {
 
     @Override
     public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
-        var book = (Book) targetDomainObject;
-        var role = (String) permission;
+        try {
+            var book = (Book) targetDomainObject;
+            var role = (String) permission;
 
-        boolean chefe = authentication
-                .getAuthorities()
-                .stream()
-                .anyMatch(p -> p.getAuthority().equals(role));
+            boolean chefe = authentication
+                    .getAuthorities()
+                    .stream()
+                    .anyMatch(p -> p.getAuthority().equals(role));
 
 
-        return chefe || book.getDono().equals(authentication.getName());
+            return chefe || book.getDono().equals(authentication.getName());
+        } catch (Exception e) {
+            return false;
+        }
+
     }
 
     @Override

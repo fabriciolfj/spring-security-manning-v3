@@ -489,3 +489,5 @@ public class DocumentService {
   }
 }
 ```
+
+- ultimo ponto, spring aceita vários permissionEvaluator, mas acata o ultimo configurado (deve-se ajustar quando possui mutiplos targets)
