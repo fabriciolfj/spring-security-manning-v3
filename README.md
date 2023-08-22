@@ -405,3 +405,87 @@ public class CustomCsrfTokenRepository implements CsrfTokenRepository
         return http.build();
     }
 ```
+
+# Authorização nivel de método
+- authorização de chamada -> decide se alguem pode chamar um método com base em algumas regras de privilégios ou acessar seu retorno
+- authorização filtragem -> decide o que o método pode receber de parâmetro e o que o chamador pode receber de volta
+
+## funcionamento autorização nivel de método
+- o spring utiliza aspectos
+- classificamos a autorização de chamada como:
+  - pré autorização -> verifica antes da chamada do método
+  - pós autorização -> verifica após a execução do método (cuidado ao usar essa abordagem para métodos mutáveis, póis não seram revertidiso, mesmo com @transactional)
+- para ativer tante a pre como a pos autorização apenas anotamos a classe de configuração @EnableMethodSecurity (nas versões anteriores pre e pos autorização não eram habilitadas com essa anotação)
+- para utilizar a autorização sobre método, podemos anotar:
+```
+@Service
+public class NameService {
+ 
+  @PreAuthorize("hasAuthority('write')")
+  public String getName() {
+    return "Fantastico";
+  }
+}
+```
+- recapitulação:
+```
+hasAnyAuthority()—Especifica várias autoridades. O usuário deve ter pelo menos uma dessas autoridades para chamar o método.
+hasRole()—Especifica uma função que um usuário deve ter para chamar o método.
+hasAnyRole()—Especifica várias funções. O usuário deve ter pelo menos um deles para chamar o método.
+```
+- uma observação ao @PostAuthorize, ele não proteje o método e sim o seu retorno, que utilizamos para a regra de exibir ou não ao chamador.
+- para regras mais complexas, podemos utilizar o hasPermissions, que necessitaŕia de uma implementação do PerimssionEvaluator
+- abaixo está um exemplo (diferente do aplicado no projeto autorizacao-method), usando targetId
+```
+@Component
+public class DocumentsPermissionEvaluator
+  implements PermissionEvaluator {
+ 
+  private final DocumentRepository documentRepository;
+ 
+  // Omitted constructor
+ 
+  @Override
+  public boolean hasPermission(Authentication authentication,
+                               Object target,
+                               Object permission) {
+    return false;
+  }
+ 
+  @Override
+  public boolean hasPermission(Authentication authentication,
+                                 Serializable targetId,
+                                 String targetType,
+                                 Object permission) {
+ 
+    String code = targetId.toString();
+    Document document = documentRepository.findDocument(code);
+ 
+    String p = (String) permission;
+ 
+ 
+    boolean admin =
+           authentication.getAuthorities()
+              .stream()
+              .anyMatch(a -> a.getAuthority().equals(p));
+ 
+     return admin ||
+       document.getOwner().equals(
+         authentication.getName());
+  }
+}
+
+@Service
+public class DocumentService {
+ 
+  private final DocumentRepository documentRepository;
+ 
+  // Omitted contructor
+ 
+  @PreAuthorize
+   ("hasPermission(#code, 'document', 'ROLE_admin')")
+  public Document getDocument(String code) {
+    return documentRepository.findDocument(code);
+  }
+}
+```
