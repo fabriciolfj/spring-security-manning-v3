@@ -1,5 +1,21 @@
 # Spring security (spring framework 6)
 
+# ATUALIZACAO
+```
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.csrf(AbstractHttpConfigurer::disable);
+        http.headers(c -> c.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
+        http.httpBasic(Customizer.withDefaults());
+        http.authorizeHttpRequests(c -> c.requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/h2-console/**")).permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/js/**")).permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/css/**")).permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/images/**")).permitAll()
+                .anyRequest().authenticated());
+
+        return http.build();
+    }
+```
 - quando cria-se um projeto spring, o mesmo vem com algumas configurações padrões, dependendo das dependências inseridas
 - no caso do spring security, ja temos o metodo Basic configurado como padrão de autenticação e os seguintes componentes criados:
 
@@ -491,3 +507,20 @@ public class DocumentService {
 ```
 
 - ultimo ponto, spring aceita vários permissionEvaluator, mas acata o ultimo configurado (deve-se ajustar quando possui mutiplos targets)
+
+# Pre filtragem e pos filtragem
+- diferente do ponto acima, a filtragem não restringe a execução do método, ele apenas filtra os parâmetros recebidos ou valores retornados, com base em sua regra
+- lembrando que essa abordagem é aplica-se em métodos que recebe uma lista/array ou retorna uma lista/array no caso de pos filtragem
+- para usar dentro de uma query, a spel de segurança, temos que add
+```
+    @Bean
+    public SecurityEvaluationContextExtension securityEvaluationContextExtension() {
+        return new SecurityEvaluationContextExtension();
+    }
+// https://mvnrepository.com/artifact/org.springframework.security/spring-security-data
+implementation group: 'org.springframework.security', name: 'spring-security-data', version: '6.1.3'
+
+
+    @Query("Select p from Product p where p.owner =?#{authentication.name} and p.describe like %:text%")
+    List<Product> findProductByDescribeContains(String text);
+``
