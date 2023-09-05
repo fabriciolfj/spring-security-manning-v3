@@ -523,4 +523,51 @@ implementation group: 'org.springframework.security', name: 'spring-security-dat
 
     @Query("Select p from Product p where p.owner =?#{authentication.name} and p.describe like %:text%")
     List<Product> findProductByDescribeContains(String text);
-``
+```
+
+# Openid Connect e OAuth2
+
+## oauth2
+- oauth2 é um especificação que informa como seprar as responsabilidades de autenticação em um sistema.
+- dessa forma, vários aplicativos podem utilizar u outro aplicativo que implementa a autenticação, ajudando os usuários a se autenticarem mais rapidamente,
+- mantendo seus dados mais seguros e minimizando os custos de implmentação nos aplicativos.
+
+### entidades participantes do oauth2
+- user -> pessoa que usa o app, geralmente usam um frontend, que chamamo de client
+- client -> app que chamada o backend e precisa de autenticação e autorização, o client pode der um app movel, desktop ou outro backend (nesse caso não precisa do user)
+- resources server -> um app backend que recebe as requisições enviadas pelo client e as autoriza
+- authenticarion server -> um app que implementa autenticação e armazenamento seguro de credenciais
+
+### classificação dos tokens
+- opaco -> token não contem dados, para implementar a autorização, o servidor de recursos chama o servidor de autorização para maiores detalhes, essa chamada tem o nome de introspecção
+- não opaco -> armazenam dados e disponibilizam imediatamente ao backend para impelementação da autorização. Tokens não opacos são conhecidos como jwt (json web token)
+
+
+#### tokens não opacos
+- são como documentos assinados
+- contem detalhes necessários para o servidor de recursos aplicar as restrições de autorização
+- e uma assinatura para validar sua autenticidade
+
+#### grant types
+- são formas pelo qual um client obtém um token 
+
+#### authorization code grant type
+- usamos esse tipo de concessão quando nosso  app precisa autenticar o usuário
+- após o client se autenticadar, junto com sua sua credencial e do user, recebe um code
+- esse code, junto com a credencial do client, e enviado novamente para pegar o token
+- para deixar mais seguro, no retorno do code, podemos usar a chave de prova ou PKCE
+- é um aprimoramento adicionado ao fluxo de código de autorização para torna-lo mais seguro.
+
+##### funcionamento do pkce
+- client gera um valor qualquer, conhecido como verificador
+- depois aplica uma função hash sobre esse valor
+- e etapa de login, o client manda resultado da função hash
+- enviada junto ao code (ja recebido), o verificador, para confirmar que é o mesmo client que fez o login do user
+
+
+#### grant type client
+- quando um backend precisa chamar outro backend
+
+
+## openid connect (OICD)
+- é um protocolo construído sobre a especificaçao oauth2
