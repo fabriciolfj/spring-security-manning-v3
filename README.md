@@ -536,10 +536,17 @@ implementation group: 'org.springframework.security', name: 'spring-security-dat
 - user -> pessoa que usa o app, geralmente usam um frontend, que chamamo de client
 - client -> app que chamada o backend e precisa de autenticação e autorização, o client pode der um app movel, desktop ou outro backend (nesse caso não precisa do user)
 - resources server -> um app backend que recebe as requisições enviadas pelo client e as autoriza
-- authenticarion server -> um app que implementa autenticação e armazenamento seguro de credenciais
+- authenticarion server 
+  - um app que implementa autenticação do usuário e o aplicativo que ele usa, também o armazenamento seguro de credenciais
+  - emissão de tokens para comprovar a autenticação, afim de acessar recursos protegidos por um backend
 
 ### classificação dos tokens
 - opaco -> token não contem dados, para implementar a autorização, o servidor de recursos chama o servidor de autorização para maiores detalhes, essa chamada tem o nome de introspecção
+```
+curl -X POST 'http://localhost:8080/oauth2/introspect?
+[CA]token=iED8-…' \
+--header 'Authorization: Basic Y2xpZW50OnNlY3JldA=='
+```
 - não opaco -> armazenam dados e disponibilizam imediatamente ao backend para impelementação da autorização. Tokens não opacos são conhecidos como jwt (json web token)
 
 
@@ -561,9 +568,25 @@ implementation group: 'org.springframework.security', name: 'spring-security-dat
 ##### funcionamento do pkce
 - client gera um valor qualquer, conhecido como verificador
 - depois aplica uma função hash sobre esse valor
-- e etapa de login, o client manda resultado da função hash
-- enviada junto ao code (ja recebido), o verificador, para confirmar que é o mesmo client que fez o login do user
-
+- e etapa de login, o client manda resultado da função hash e o algoritimo usado (desafio)
+- depois enviada junto ao code (ja recebido), o verificador (valor nao aplicado algoritimo) , para confirmar que é o mesmo client que fez o login do user
+```
+//verificador
+SecureRandom secureRandom = new SecureRandom();
+byte [] code = new byte[32];
+secureRandom.nextBytes(code);
+String codeVerifier = Base64.getUrlEncoder()
+        .withoutPadding()
+        .encodeToString(code);
+        
+//desafio
+MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+ 
+byte [] digested = messageDigest.digest(verifier.getBytes());
+String codeChallenge = Base64.getUrlEncoder()
+          .withoutPadding()
+          .encodeToString(digested);     
+```
 
 #### grant type client
 - quando um backend precisa chamar outro backend
@@ -571,3 +594,206 @@ implementation group: 'org.springframework.security', name: 'spring-security-dat
 
 ## openid connect (OICD)
 - é um protocolo construído sobre a especificaçao oauth2
+
+## Principais componentes para configurar um authorization server
+- filtro de configuração para terminais de protocolo (configurações específicas)
+- filtros de configuração de autenticação (cors, csrf, spring security por ex)
+- componentes de gerenciamento de detalhes do usuário (userDetailsService)
+- gerenciamento de detalhes do client (registered client repository, client - app cliente)
+- gerenciamento de chaves (chave publica e privada)
+- exemplo de uma configuração do servidor de autorização no spring
+```
+package com.github.authorizationserverv1;
+
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.UUID;
+
+@Configuration
+public class SecurityConfig {
+    
+    //precisamos definir uma ordem de configuração, pois são muitos filtros, este configura o endpoint para o usuario logar
+    @Bean
+    @Order(1)
+    public SecurityFilterChain addFilterChain(final HttpSecurity httpSecurity) throws Exception {
+        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(httpSecurity);
+        
+        httpSecurity.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
+                .oidc(Customizer.withDefaults());
+        
+        httpSecurity.exceptionHandling(e -> e.authenticationEntryPoint(
+                new LoginUrlAuthenticationEntryPoint("/login")
+        ));
+        
+        return httpSecurity.build();
+    }
+    
+    //este configura as rotas liberadas ou que precisam ser autenticadas
+    @Bean
+    @Order(2)
+    public SecurityFilterChain defaultSecurityFilterChain(final HttpSecurity http) throws Exception {
+        http.formLogin(Customizer.withDefaults());
+        
+        http.authorizeHttpRequests(c -> c.anyRequest().authenticated());
+        return http.build();
+    }
+    
+    @Bean
+    public UserDetailsService userDetailsService(final PasswordEncoder passwordEncoder) {
+        final UserDetails user = User.withUsername("bill")
+                .password(passwordEncoder.encode("1234"))
+                .roles("USER")
+                .build();
+        
+        return new InMemoryUserDetailsManager(user);
+    }
+    
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+    //simular ao userdetailsSrvice e userDetails, para o usuario, mas este é para o client  (app cliente)
+    @Bean
+    public RegisteredClientRepository registeredClientRepository() {
+        RegisteredClient registeredClient2 =
+                RegisteredClient
+                        .withId(UUID.randomUUID().toString())
+                        .clientId("client2")
+                        .clientSecret("secret")
+                        .clientAuthenticationMethod(
+                                ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                        .authorizationGrantType(
+                                AuthorizationGrantType.AUTHORIZATION_CODE)
+                        .authorizationGrantType(
+                                AuthorizationGrantType.CLIENT_CREDENTIALS)
+                        .authorizationGrantType(
+                                AuthorizationGrantType.REFRESH_TOKEN)
+                        .redirectUri("https://www.manning.com/authorized")
+                        .scope(OidcScopes.OPENID)
+                        .build();
+        
+        RegisteredClient registeredClient =
+                RegisteredClient
+                        .withId(UUID.randomUUID().toString())
+                        .clientId("client")
+                        .clientSecret("secret")
+                        .clientAuthenticationMethod(
+                                ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                        .authorizationGrantType(
+                                AuthorizationGrantType.AUTHORIZATION_CODE)
+                        .redirectUri("https://www.manning.com/authorized")
+                        .scope(OidcScopes.OPENID)
+                        .build();
+
+        return new InMemoryRegisteredClientRepository(registeredClient, registeredClient2);
+    }
+    // ideal que as chaves ficam externas a aplicação e consultaadas
+    @Bean
+    public JWKSource<SecurityContext> jwkSource()
+            throws NoSuchAlgorithmException {
+
+        KeyPairGenerator keyPairGenerator =
+                KeyPairGenerator.getInstance("RSA");
+
+        keyPairGenerator.initialize(2048);
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+
+        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+
+        RSAKey rsaKey = new RSAKey.Builder(publicKey)
+                .privateKey(privateKey)
+                .keyID(UUID.randomUUID().toString())
+                .build();
+
+        JWKSet jwkSet = new JWKSet(rsaKey);
+        return new ImmutableJWKSet<>(jwkSet);
+    }
+
+    //este para customizar todos os caminhos do servidor de autorização, se criarmos apenas, os endpotins receberão alguns padrões
+    @Bean
+    public AuthorizationServerSettings authorizationServerSettings() {
+        return AuthorizationServerSettings.builder().build();
+    }
+}
+
+```
+
+## um pouco sobre o jose
+```
+O JOSE (Javascript Object Signing and Encryption) é um framework para segurança em APIs REST utilizando JWT, JWS e JWE para criptografia e assinatura de conteúdo JSON.
+
+Ele pode ser utilizado com OAuth2 no Spring Boot para autenticação e autorização.
+
+Alguns pontos:
+
+O JWT (JSON Web Token) é um padrão RFC para tokens de acesso compactos e autocontidos.
+O token JWT contém claims que carregam informações como escopo, expiração, roles.
+É assinado digitalmente para garantir integridade.
+O Spring Security OAuth2 integra com JWT para emitir tokens após autenticação.
+Tokens JWT são retornados para o cliente e utilizados para autenticar requisições seguintes.
+O cliente envia o token no header Authorization: Bearer [jwt].
+Os endpoints são protegidos via @EnableGlobalMethodSecurity com pré-autorização.
+As roles/escopos dentro do token são utilizados para autorização.
+
+
+WS e JWE são especificações relacionadas ao JOSE que definem formatos para assinatura e criptografia de conteúdo JSON respectivamente:
+
+JWS (JSON Web Signature): Define um formato para assinar digitalmente conteúdo JSON serializado. Usado para verificar integridade e autenticidade.
+JWE (JSON Web Encryption): Especifica uma forma de criptografar conteúdo JSON usando algoritmos simétricos e assimétricos. Ideal para segurança em trânsito.
+
+```
+
+## para descobrir os endpotins expostos pelo servidor de autorização, afim de solicitar o token?
+- apenas chame o endpoint http://localhost:8080/.well-known/openid-configuration
+- exemplo para chamar o endpoint de autorização (authentication code):
+  - http://localhost:8080/oauth2/authorize?response_type=code&client_id=client&scope=openid&redirect_uri=https://www.manning.com/authorized&code_challenge=QYPAZ5NU8yvtlQ9erXrUYR-T5AGCjCF47vN-KsaI2A8&code_challenge_method=S256
+- no exemplo acima, estamos usando o pkce, chave de desafio, caso queira desabilitar:
+```
+RegisteredClient registeredClient = RegisteredClient
+        .withId(UUID.randomUUID().toString())
+        .clientId("client")
+        // …
+        .clientSettings(ClientSettings.builder()
+            .requireProofKey(false)
+            .build()) 
+        .build();
+```
+
+## revogação de token
+```
+curl -X POST 'http://localhost:8080/oauth2/revoke?
+[CA]token=N7BruErWm-44-…' \
+--header 'Authorization: Basic Y2xpZW50OnNlY3JldA==' 
+```
