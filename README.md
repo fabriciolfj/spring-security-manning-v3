@@ -768,7 +768,7 @@ Os endpoints são protegidos via @EnableGlobalMethodSecurity com pré-autorizaç
 As roles/escopos dentro do token são utilizados para autorização.
 
 
-WS e JWE são especificações relacionadas ao JOSE que definem formatos para assinatura e criptografia de conteúdo JSON respectivamente:
+JWS e JWE são especificações relacionadas ao JOSE que definem formatos para assinatura e criptografia de conteúdo JSON respectivamente:
 
 JWS (JSON Web Signature): Define um formato para assinar digitalmente conteúdo JSON serializado. Usado para verificar integridade e autenticidade.
 JWE (JSON Web Encryption): Especifica uma forma de criptografar conteúdo JSON usando algoritmos simétricos e assimétricos. Ideal para segurança em trânsito.
