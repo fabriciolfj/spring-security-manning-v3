@@ -799,9 +799,9 @@ curl -X POST 'http://localhost:8080/oauth2/revoke?
 ```
 
 ## servidor de recursos em detalhes
-- o servidor de recursos precisa conhece a url http://localhost:9090/oauth2/jwks (que podemos ve-la aqui http://localhost:8080/.well-known/openid-configuration), afim de pegar a chave publica e valida o token
+- o servidor de recursos precisa conhecer a url http://localhost:9090/oauth2/jwks (que podemos ve-la aqui http://localhost:8080/.well-known/openid-configuration), afim de pegar a chave publica pra validar o token
 - pode-se fazer uso do endpoint de introspecção
-  - quando precisamos de mais detalhes que não esteja no token, precisamos consultar o servidor de autorização (indicado para token opaco)
+  - quando precisamos de mais detalhes que não esteja no token ou revogar ele, precisamos consultar o servidor de autorização (indicado para token opaco)
 - diferença entre a configuração para o token opaco e jwt
 - opaco
 ```
@@ -834,7 +834,7 @@ curl -X POST 'http://localhost:8080/oauth2/revoke?
     }
 ```
 
-## multilocatarios
+## multitenancy
 - quando o servidor de recurso, depende de vários servidores de autorização
 - para esses casos podemos fazer do authenticatioManagerResolver 
   - ele tem a função similar do authentication manager que delega para o authentication provider 
@@ -922,4 +922,22 @@ public class ProjectConfig {
        "client", "secret");
   }
 }
+```
+
+## um pouco mais de explicação da chave publica e privada
+
+```
+As chaves pública e privada são utilizadas no OAuth 2.0 para assinar e verificar tokens, proporcionando segurança ao fluxo de autorização. O uso delas ocorre da seguinte maneira:
+
+O servidor de autorização possui um par de chaves pública-privada para assinatura de tokens.
+A chave privada é mantida em sigilo pelo servidor e usada para assinar os tokens JWT enviados ao cliente.
+A chave pública é compartilhada com os clientes e permite que eles verifiquem a assinatura do token.
+Quando o cliente recebe um token assinado, ele valida a assinatura usando a chave pública do servidor.
+Isso garante que o token foi realmente emitido pelo servidor legítimo e não foi adulterado.
+Como somente o servidor tem acesso à chave privada, um invasor não consegue criar tokens válidos e assinados.
+Se o token foi modificado ou a assinatura não bate com a chave pública, o cliente o rejeita.
+Desta forma, a identidade do servidor é validada e a integridade do token é verificada.
+O OAuth 2.0 requer o uso de criptografia assimétrica e assinaturas digitais para maior segurança.
+As chaves também podem ser rotacionadas periodicamente para maior proteção contra ataques.
+Portanto, as chaves pública-privada são peças fundamentais na arquitetura de segurança do OAuth 2.0.
 ```
