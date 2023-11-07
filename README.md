@@ -290,7 +290,7 @@ T(java.time.LocalTime).now().isAfter(T(java.time.LocalTime).of(12, 0))
 
 ### use de roles
 - roles é uma conjunto de autoridades que um usuário pode executar
-- por exemplo admin é uma role, que podem read, write e delete
+- por exemplo admin é uma role, que podem ser read, write e delete
 - lembrando que as roles devem começar com ROLE_, como ROLE_ADMIN, para criar ao usuario
 - em seu uso, deve ignorar o prefixo ROLE_
 - para definir restrições com base em roles, podem usar os seguintes métodos, hasRole(), hasAnyRole() e access()
@@ -317,7 +317,7 @@ T(java.time.LocalTime).now().isAfter(T(java.time.LocalTime).of(12, 0))
                         .anyRequest().permitAll())
 ```
 - sempre vamos do mais especifico para o geral, caso queira restringir um caminho e liberar os demais, começo pela restrição
-- podemos referenciar a varios valores no path ou a apenas um, utilizando o corings ** para varias ou * para um, como:
+- podemos referenciar a varios valores no path ou a apenas um, utilizando o coringas ** para varias ou * para um, como:
 ```
 http.authorizeHttpRequests(
                 c -> c.requestMatchers("/a/**).authenticated()
@@ -347,7 +347,7 @@ http.authorizeHttpRequests(
 ```
 
 ## CSRF
-- por default endpoints post são protejidos pelo filter csrf no spring security
+- por default endpoints post são protegidos pelo filter csrf no spring security
 - csrf é um tipo de ataque generalizado, fazendo com que os usuários executem ações indesejadas em um app web após a autenticação.
 - para se proteger, envia-se um token exclusivo no header da requisição (não o token de autenticação), para operações mutantes (post, put, delete, path)
 - esse token é usado pelo filter csrffilter (que intercepta todas as requisições quando a proteção csrf estiver ativa)
@@ -768,7 +768,7 @@ Os endpoints são protegidos via @EnableGlobalMethodSecurity com pré-autorizaç
 As roles/escopos dentro do token são utilizados para autorização.
 
 
-WS e JWE são especificações relacionadas ao JOSE que definem formatos para assinatura e criptografia de conteúdo JSON respectivamente:
+JWS e JWE são especificações relacionadas ao JOSE que definem formatos para assinatura e criptografia de conteúdo JSON respectivamente:
 
 JWS (JSON Web Signature): Define um formato para assinar digitalmente conteúdo JSON serializado. Usado para verificar integridade e autenticidade.
 JWE (JSON Web Encryption): Especifica uma forma de criptografar conteúdo JSON usando algoritmos simétricos e assimétricos. Ideal para segurança em trânsito.
