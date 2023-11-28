@@ -1,0 +1,23 @@
+spring:
+  security:
+    oauth2:
+      client:
+        provider:
+          my_authorization_server:
+            issuer-uri: http://127.0.0.1:9090
+        registration:
+          my_authorization_server:
+            client-id: client
+            client-name: Custom
+            client-secret: secret
+            provider: my_authorization_server
+            authorization-grant-type: client-credentials
+            client-authentication-method: client_secret_basic
+            redirect-uri: http://localhost:8080/login/oauth2/code/my_authorization_server
+            scope[0]: openid
+          google:
+            client-id: 317260968147-d177023mof8gni26hl4pouan64jardpe.apps.googleusercontent.com
+            client-secret: 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
+          github:
+            client-id: 317260968147-d177023mof8gni26hl4pouan64jardpe.apps.googleusercontent.com
+            client-secret: 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

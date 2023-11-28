@@ -941,3 +941,7 @@ O OAuth 2.0 requer o uso de criptografia assimétrica e assinaturas digitais par
 As chaves também podem ser rotacionadas periodicamente para maior proteção contra ataques.
 Portanto, as chaves pública-privada são peças fundamentais na arquitetura de segurança do OAuth 2.0.
 ```
+
+## usando provedores conhecidos (projeto oauth2-client)
+- com useo de authorization server conhecidos pelo spring (google, github, facebbok, okta), não precisamos de muita configuração, apenas das credenciais client (cada provedor tem sua config)
+- ex: https://developers.google.com/identity/ protocolos/oauth2

@@ -59,6 +59,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
     @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(final HttpSecurity http) throws Exception {
         http.formLogin(Customizer.withDefaults());
@@ -74,12 +79,7 @@ public class SecurityConfig {
                 .roles("USER")
                 .build();
 
-        return new InMemoryUserDetailsManager(user);
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+       return new InMemoryUserDetailsManager(user);
     }
 
     @Bean
@@ -113,7 +113,7 @@ public class SecurityConfig {
                                 AuthorizationGrantType.CLIENT_CREDENTIALS)
                         .build();
 
-        RegisteredClient registeredClient =
+        /*RegisteredClient registeredClient =
                 RegisteredClient
                         .withId(UUID.randomUUID().toString())
                         .clientId("client")
@@ -124,7 +124,22 @@ public class SecurityConfig {
                                 AuthorizationGrantType.AUTHORIZATION_CODE)
                         .redirectUri("https://www.manning.com/authorized")
                         .scope(OidcScopes.OPENID)
-                        .build();
+                        .build();*/
+
+        var registeredClient = RegisteredClient
+                .withId(UUID.randomUUID().toString())
+                .clientId("client")
+                .clientSecret(passwordEncoder.encode("secret"))
+                .clientAuthenticationMethod(
+                        ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .authorizationGrantType(
+                        //AuthorizationGrantType.AUTHORIZATION_CODE
+                        AuthorizationGrantType.CLIENT_CREDENTIALS
+                )
+                //.redirectUri(
+                 //       "http://localhost:8080/login/oauth2/code/my_authorization_server")
+                .scope(OidcScopes.OPENID)
+                .build();
 
         return new InMemoryRegisteredClientRepository(registeredClient, registeredClient2, resourceServer);
     }
