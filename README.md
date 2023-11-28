@@ -942,6 +942,8 @@ As chaves também podem ser rotacionadas periodicamente para maior proteção co
 Portanto, as chaves pública-privada são peças fundamentais na arquitetura de segurança do OAuth 2.0.
 ```
 
-## usando provedores conhecidos (projeto oauth2-client)
+## usando provedores conhecidos (projeto oauth2-client), para obter um token via oauth2Client
 - com useo de authorization server conhecidos pelo spring (google, github, facebbok, okta), não precisamos de muita configuração, apenas das credenciais client (cada provedor tem sua config)
 - ex: https://developers.google.com/identity/ protocolos/oauth2
+- podemos configurar um custom, nesse caso precisamos preencher as informações do authorization-server
+- para grant-type client-credentials, podemos configurar um client repository na app
