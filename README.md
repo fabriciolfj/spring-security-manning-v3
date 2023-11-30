@@ -947,3 +947,33 @@ Portanto, as chaves pública-privada são peças fundamentais na arquitetura de 
 - ex: https://developers.google.com/identity/ protocolos/oauth2
 - podemos configurar um custom, nesse caso precisamos preencher as informações do authorization-server
 - para grant-type client-credentials, podemos configurar um client repository na app
+
+# Spring security no contexto reativo:
+- a estrutura do spring security para o contexto reactivo, resume-se em:
+  -  authenticationwebfilter -> reactiveAuthenticationManager
+  - não temos um AuthenticationProvider, o manager ja faz tudo
+- em vez do userDetailsService temos ReactiveUserDetailsService
+- temos o securityFilterChain, para reactive SecurityWebFilterChain
+```
+    @Bean
+    public SecurityWebFilterChain securityWebFilterChain(final ServerHttpSecurity http) {
+        http.httpBasic(Customizer.withDefaults());
+        
+        http.authorizeExchange(c -> c.pathMatchers(HttpMethod.GET, "/hello")
+                .authenticated()
+                .anyExchange()
+                .permitAll()
+        );
+        
+        return http.build();
+    }
+```
+- o contexto de segurança, pode ser obtido de duas formas:
+```
+    @GetMapping("/hello")
+    public Mono<String> hello(Mono<Authentication> auth) --> essa {
+        //ReactiveSecurityContextHolder.getContext() --> ou essa
+        Mono<String> message = auth.map(a -> "Hello " + a.getName());
+        return message;
+    }
+```
