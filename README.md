@@ -41,6 +41,13 @@
 return new InMemoryUserDetailsManager(user);
 ```
 
+### configurando para aceitar https
+```
+server.ssl.key-store-type=PKCS12
+server.ssl.key-store=classpath:certificate.p12
+server.ssl.key-store-password=12345
+```
+
 #### UserDetailsManager
 - responsável por modificar, adicionar ou excluir um usuário.
 
