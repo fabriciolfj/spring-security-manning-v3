@@ -5,6 +5,10 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -32,6 +36,9 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -146,7 +153,28 @@ public class SecurityConfig {
 
     @Bean
     public JWKSource<SecurityContext> jwkSource()
-            throws NoSuchAlgorithmException {
+            throws NoSuchAlgorithmException, IOException {
+       /*
+        // Lê a chave pública PEM
+        PEMParser pemParser = new PEMParser(new FileReader("public-key.pem"));
+        SubjectPublicKeyInfo publicKeyInfo = (SubjectPublicKeyInfo)pemParser.readObject();
+        JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
+
+        RSAPublicKey publicKey = (RSAPublicKey) converter.getPublicKey(publicKeyInfo);
+
+        // Lê a chave privada PEM
+        pemParser = new PEMParser(new FileReader("private-key.pem"));
+        PrivateKeyInfo privateKeyInfo = (PrivateKeyInfo)pemParser.readObject();
+
+        RSAPrivateKey privateKey = (RSAPrivateKey) converter.getPrivateKey(privateKeyInfo);
+
+        RSAKey rsaKey = new RSAKey.Builder(publicKey)
+                .privateKey(privateKey)
+                .keyID(UUID.randomUUID().toString())
+                .build();
+
+        JWKSet jwkSet = new JWKSet(rsaKey);
+        return new ImmutableJWKSet<>(jwkSet);*/
 
         KeyPairGenerator keyPairGenerator =
                 KeyPairGenerator.getInstance("RSA");
