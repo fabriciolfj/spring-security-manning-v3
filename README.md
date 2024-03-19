@@ -577,6 +577,24 @@ curl -X POST 'http://localhost:8080/oauth2/introspect?
 - depois aplica uma função hash sobre esse valor
 - e etapa de login, o client manda resultado da função hash e o algoritimo usado (desafio)
 - depois enviada junto ao code (ja recebido), o verificador (valor nao aplicado algoritimo) , para confirmar que é o mesmo client que fez o login do user
+
+```
+Cliente Gera um Valor Aleatório (Code Verifier): O cliente gera um valor aleatório e conhecido como o code verifier. Este é um valor longo e aleatório, geralmente codificado em base64, e pode conter caracteres alfanuméricos.
+
+Aplicação de Função Hash: O cliente aplica uma função hash (por exemplo, SHA-256) no valor do code verifier, resultando em um hash.
+
+Início do Processo de Autorização: Quando o usuário decide acessar um recurso protegido, o cliente inicia o processo de autorização solicitando um código de autorização do servidor de autorização.
+
+Inclusão do Desafio (Challenge) no Pedido de Autorização: O cliente inclui o valor do hash (code challenge) e o método de transformação (por exemplo, "S256" para SHA-256) no pedido de autorização.
+
+Usuário Autentica-se: O usuário autentica-se no servidor de autorização e concede permissão ao cliente para acessar o recurso protegido.
+
+Servidor de Autorização Gera o Código de Autorização: Com base na autenticação do usuário, o servidor de autorização gera um código de autorização e o retorna para o cliente.
+
+Troca do Código de Autorização por um Token de Acesso: O cliente envia o código de autorização, juntamente com o code verifier original (valor não transformado), para o servidor de autorização.
+
+Verificação do Code Verifier: O servidor de autorização verifica se o code verifier corresponde ao code challenge incluído na solicitação original. Se corresponderem, o servidor de autorização emite um token de acesso ao cliente.
+```
 ```
 //verificador
 SecureRandom secureRandom = new SecureRandom();
