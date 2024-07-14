@@ -1002,3 +1002,12 @@ Portanto, as chaves pública-privada são peças fundamentais na arquitetura de 
         return message;
     }
 ```
+# propagar token no contexto reativo
+```
+    @Bean
+    public WebClient webClient() {
+        return WebClient.builder()
+                .filter(new ServletBearerExchangeFilterFunction())
+                .build();
+    }
+```
